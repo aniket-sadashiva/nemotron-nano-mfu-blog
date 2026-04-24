@@ -1,0 +1,10 @@
+{"step": 9, "epoch": 0, "val_loss": 3.0562, "lr": 1e-05, "num_label_tokens": 3160, "val_name": "default"}
+{"step": 19, "epoch": 0, "val_loss": 1.1486, "lr": 9.73e-06, "num_label_tokens": 3160, "val_name": "default"}
+{"step": 29, "epoch": 0, "val_loss": 0.3291, "lr": 8.95e-06, "num_label_tokens": 3160, "val_name": "default"}
+{"step": 39, "epoch": 0, "val_loss": 0.0991, "lr": 7.75e-06, "num_label_tokens": 3160, "val_name": "default"}
+{"step": 49, "epoch": 0, "val_loss": 0.0979, "lr": 6.28e-06, "num_label_tokens": 3160, "val_name": "default"}
+{"step": 59, "epoch": 0, "val_loss": 0.0965, "lr": 4.72e-06, "num_label_tokens": 3160, "val_name": "default"}
+{"step": 69, "epoch": 0, "val_loss": 0.0969, "lr": 3.25e-06, "num_label_tokens": 3160, "val_name": "default"}
+{"step": 79, "epoch": 0, "val_loss": 0.0953, "lr": 2.05e-06, "num_label_tokens": 3160, "val_name": "default"}
+{"step": 89, "epoch": 0, "val_loss": 0.0963, "lr": 1.27e-06, "num_label_tokens": 3160, "val_name": "default"}
+{"step": 99, "epoch": 0, "val_loss": 0.0958, "lr": 1e-06, "num_label_tokens": 3160, "val_name": "default"}

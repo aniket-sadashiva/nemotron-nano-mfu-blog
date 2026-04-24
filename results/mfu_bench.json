@@ -1,0 +1,16 @@
+{
+  "total_steps": 15,
+  "warmup_steps": 5,
+  "training_steps": 10,
+  "setup_time_seconds": 110.2532799243927,
+  "warmup_time_seconds": 110.36458849906921,
+  "training_time_seconds": 22.470357656478882,
+  "avg_iter_time_seconds": 2.247035765647888,
+  "avg_mfu_percent": 19.63506898943243,
+  "tflops_per_gpu": 3490.82996441088,
+  "peak_tflops": 989,
+  "world_size": 8,
+  "global_batch_size": 8,
+  "local_batch_size": 1,
+  "seq_len": 20480
+}

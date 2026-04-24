@@ -1,0 +1,103 @@
+# Stock HF NemotronHForCausalLM + GroupedGEMM patch, optimized for MFU.
+# Reproduces the ~19.7% MFU result reported in the blog post.
+#
+# Launch: bash scripts/run_mfu_bench.sh
+#
+# Config:
+#   model      : nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16 (30B MoE, 3B active)
+#   seq_len    : 20480 tokens (sweet spot - see blog for sweep)
+#   batch      : micro=1, global=8 (8x H100 DP)
+#   optimizer  : Adagrad (lighter optimizer state than Adam)
+#   compile    : torch.compile, mode=default
+#   experts    : MoE patched post-load with batched grouped_gemm (all 128
+#                experts computed in one GEMM each for up_proj + down_proj)
+#
+# Hardware: 8x H100 80GB, NVLink. Peak BF16 TFLOPs = 989 / GPU.
+
+seed: 42
+
+benchmark:
+  warmup_steps: 5
+  peak_tflops: 989
+  nsys_start: -1
+  nsys_end: -1
+  nsys_ranks: []
+  num_nodes: 1
+
+step_scheduler:
+  global_batch_size: 8
+  local_batch_size: 1
+  ckpt_every_steps: 50
+  val_every_steps: 1000
+  max_steps: 15
+
+dist_env:
+  backend: nccl
+  timeout_minutes: 15
+
+rng:
+  _target_: nemo_automodel.components.training.rng.StatefulRNG
+  seed: 1111
+  ranked: true
+
+# Parallelizer replaces each NemotronHMOE.moe for-loop with a batched
+# grouped_gemm. Resolved via PYTHONPATH (we add the patch/ dir).
+parallelizer:
+  _target_: gmm_patch.parallelize_nemotronh_gmm
+  activation_checkpointing: true
+  reshard_after_forward: true
+
+model:
+  _target_: nemo_automodel.NeMoAutoModelForCausalLM.from_pretrained
+  pretrained_model_name_or_path: nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16
+  torch_dtype: bf16
+  trust_remote_code: true
+  force_hf: true
+  attn_implementation: eager
+
+checkpoint:
+  enabled: false
+  checkpoint_dir: checkpoints/
+  model_save_format: torch_save
+  save_consolidated: false
+  load_base_model: false
+
+distributed:
+  _target_: nemo_automodel.components.distributed.fsdp2.FSDP2Manager
+  dp_size: none
+  dp_replicate_size: 1
+  tp_size: 1
+  cp_size: 1
+  sequence_parallel: false
+  use_hf_tp_plan: false
+
+compile:
+  enabled: true
+  mode: "default"
+  fullgraph: false
+  dynamic: false
+  backend: null
+
+loss_fn:
+  _target_: nemo_automodel.components.loss.masked_ce.MaskedCrossEntropy
+
+# Mock dataset — benchmark measures throughput, not correctness.
+dataset:
+  _target_: nemo_automodel.components.datasets.llm.mock_iterable_dataset.MockIterableDataset
+  vocab_size: 100
+  seq_len: 20480
+  num_samples: 1000000
+
+dataloader:
+  _target_: torch.utils.data.DataLoader
+  batch_size: null
+
+optimizer:
+  _target_: torch.optim.Adagrad
+  lr: 1.0e-4
+  eps: 1.0e-10
+  weight_decay: 0
+
+lr_scheduler:
+  lr_decay_style: cosine
+  min_lr: 1.0e-6
